@@ -12,10 +12,19 @@ app.use(express.json());
 app.use(cors());
 
 // Conexión a la base de datos
-mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost/paseo-tel', {
-    useNewUrlParser: true, 
-    useUnifiedTopology: true, 
-    useCreateIndex: true
+mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/paseo-tel', {
+    useNewUrlParser: true,
+    useUnifiedTopology: true
+}).then(() => {
+    console.log('Conexión a MongoDB establecida');
+}).catch(err => {
+    console.error('Error al conectar a MongoDB:', err);
+    process.exit(1);
+});
+
+// Manejo de errores de MongoDB
+mongoose.connection.on('error', err => {
+    console.error('Error de MongoDB:', err);
 });
 
 // Rutas
@@ -35,9 +44,16 @@ app.get('*', (req, res) => {
 const server = http.createServer(app);
 const io = socketIo(server);
 
+// Asignar io a la aplicación para acceder desde las rutas
+app.set('io', io);
+
 // Configuración de Socket.io
 io.on('connection', (socket) => {
-    console.log('Nuevo cliente conectado');
+    console.log('Nuevo cliente conectado:', socket.id);
+
+    socket.on('error', (error) => {
+        console.error('Error de Socket.io:', error);
+    });
 
     socket.on('requestRedeem', (data) => {
         // Notificar a administrativos de una nueva solicitud
@@ -52,6 +68,12 @@ io.on('connection', (socket) => {
     socket.on('disconnect', () => {
         console.log('Cliente desconectado');
     });
+});
+
+// Manejo de errores global
+app.use((err, req, res, next) => {
+    console.error(err.stack);
+    res.status(500).json({ message: 'Error interno del servidor' });
 });
 
 // Iniciar servidor

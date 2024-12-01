@@ -11,10 +11,10 @@ router.post('/request', auth(), async (req, res) => {
     // Validar tipo y límites
     if (type === 'food' && user.foodRedeemed < user.maxFood) {
         // Notificar a administrativos mediante Socket.io
-        req.app.io.emit('newRedeemRequest', { userId: user._id, type });
+        req.app.get('io').emit('newRedeemRequest', { userId: user._id, type });
         res.json({ message: 'Solicitud de comida enviada' });
     } else if (type === 'beverage' && user.beveragesRedeemed < user.maxBeverages) {
-        req.app.io.emit('newRedeemRequest', { userId: user._id, type });
+        req.app.get('io').emit('newRedeemRequest', { userId: user._id, type });
         res.json({ message: 'Solicitud de bebida enviada' });
     } else {
         res.status(400).json({ message: 'Límite de canjes alcanzado' });

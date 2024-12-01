@@ -1,15 +1,27 @@
 import React, { useState, useContext } from 'react';
 import axios from 'axios';
 import { AuthContext } from '../context/AuthContext';
+import {
+    Container,
+    TextField,
+    Button,
+    Typography,
+    Alert,
+    Box,
+    MenuItem,
+    CircularProgress
+} from '@mui/material';
 
 function Register(props) {
     const { authData } = useContext(AuthContext);
     const [name, setName] = useState('');
     const [dietType, setDietType] = useState('omnívora');
     const [error, setError] = useState('');
+    const [loading, setLoading] = useState(false);
 
     const handleRegister = async (e) => {
         e.preventDefault();
+        setLoading(true);
         try {
             await axios.put(
                 '/auth/register',
@@ -19,29 +31,54 @@ function Register(props) {
             props.history.push('/assistant');
         } catch (err) {
             setError(err.response.data.message || 'Error al completar el registro');
+        } finally {
+            setLoading(false);
         }
     };
 
     return (
-        <div className="register-container">
-            <form onSubmit={handleRegister}>
-                <h2>Completar Perfil</h2>
-                {error && <p className="error">{error}</p>}
-                <input
-                    type="text"
-                    placeholder="Nombre"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    required
-                />
-                <select value={dietType} onChange={(e) => setDietType(e.target.value)}>
-                    <option value="vegetariana">Vegetariana</option>
-                    <option value="vegana">Vegana</option>
-                    <option value="omnívora">Omnívora</option>
-                </select>
-                <button type="submit">Guardar</button>
-            </form>
-        </div>
+        <Container maxWidth="xs">
+            <Box mt={8} display="flex" flexDirection="column" alignItems="center">
+                <Typography component="h1" variant="h5">
+                    Completar Perfil
+                </Typography>
+                {error && <Alert severity="error">{error}</Alert>}
+                <form onSubmit={handleRegister} style={{ width: '100%', marginTop: '1em' }}>
+                    <TextField
+                        variant="outlined"
+                        margin="normal"
+                        fullWidth
+                        label="Nombre"
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
+                        required
+                    />
+                    <TextField
+                        select
+                        variant="outlined"
+                        margin="normal"
+                        fullWidth
+                        label="Tipo de Dieta"
+                        value={dietType}
+                        onChange={(e) => setDietType(e.target.value)}
+                    >
+                        <MenuItem value="vegetariana">Vegetariana</MenuItem>
+                        <MenuItem value="vegana">Vegana</MenuItem>
+                        <MenuItem value="omnívora">Omnívora</MenuItem>
+                    </TextField>
+                    <Button
+                        type="submit"
+                        fullWidth
+                        variant="contained"
+                        color="primary"
+                        disabled={loading}
+                        style={{ marginTop: '1em' }}
+                    >
+                        {loading ? <CircularProgress size={24} /> : 'Guardar'}
+                    </Button>
+                </form>
+            </Box>
+        </Container>
     );
 }
 
